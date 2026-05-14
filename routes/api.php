@@ -18,6 +18,15 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 // Protected Routes (require authentication/Can only be accessed with a token)
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:sanctum')->group(function () {
+    // Routes for viewing user data and balance
+    Route::get('/user', function (Request $request) {
+        return response()->json([
+            'status' => 'success',
+            'data' => $request->user()
+        ]);
+    });
+
+    // Transaction Routes
+    Route::post('/trade/buy', [App\Http\Controllers\Api\TransactionController::class, 'buy']);
 });
