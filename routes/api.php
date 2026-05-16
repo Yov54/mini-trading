@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MarketController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -30,3 +31,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // Transaction Routes
     Route::post('/trade/buy', [App\Http\Controllers\Api\TransactionController::class, 'buy']);
 });
+
+Route::get('/market-prices', [MarketController::class, 'getPrices']);
