@@ -1,58 +1,108 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Mini Trading API (RESTful)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A RESTful API built with Laravel 11 to simulate the backend engine of a basic trading platform.
 
-## About Laravel
+I built this project mainly to practice and implement backend architectures suitable for financial applications, focusing on data consistency, performance, and keeping the controllers clean.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Under the Hood (Architecture & Concepts)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Instead of dumping everything into the controllers, I tried to structure this similar to how larger enterprise apps are built:
 
-## Learning Laravel
+### Service-Repository Pattern
+Business logic (like checking user balance) lives in the Services, while database queries are isolated in Repositories.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Database Transactions
+Used during the **Buy Order** process to ensure that if something fails mid-execution, the user's balance is rolled back safely.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Redis Caching
+Market prices change rapidly. To prevent database overload, the `/market-prices` endpoint retrieves simulated data directly from Redis cache.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### Background Jobs (Queues)
+Email/transaction notifications are pushed to a Redis-backed queue so the API can respond instantly without waiting for the email to send.
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+# Getting Started
+
+You can run this project locally using your own setup (Laragon/XAMPP) or via Docker.
+
+---
+
+## The Docker Way (Recommended)
+
+If you have Docker and Docker Compose installed, simply run:
 
 ```bash
-composer require laravel/boost --dev
+# 1. Clone the repository
+git clone https://github.com/YOUR_GITHUB_USERNAME/mini-trading-api.git
+cd mini-trading-api
 
-php artisan boost:install
+# 2. Setup environment
+cp .env.example .env
+
+# 3. Start containers (Nginx, PHP, MySQL, Redis)
+docker-compose up -d
+
+# 4. Install dependencies & run migration
+docker exec -it mifx_app composer install
+docker exec -it mifx_app php artisan key:generate
+docker exec -it mifx_app php artisan migrate
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+## Manual Installation (Laragon / Valet / XAMPP)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+# Clone repository
+git clone https://github.com/YOUR_GITHUB_USERNAME/mini-trading.git
 
-## Code of Conduct
+# Enter project directory
+cd mini-trading
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Install dependencies
+composer install
 
-## Security Vulnerabilities
+# Setup environment
+cp .env.example .env
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Generate app key
+php artisan key:generate
 
-## License
+# Run migration
+php artisan migrate
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Start local server
+php artisan serve
+```
+
+### Optional
+
+Run queue worker for testing background jobs:
+
+```bash
+php artisan queue:work
+```
+
+---
+
+# API Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/ping` | Health check & timestamp | No |
+| POST | `/api/register` | Create a new account | No |
+| POST | `/api/login` | Authenticate & get Sanctum token | No |
+| GET | `/api/market-prices` | Get simulated prices (from Redis Cache) | No |
+| GET | `/api/user` | Get current user profile & balance | Yes |
+| POST | `/api/trade/buy` | Place buy order (DB Transaction & Queue Job) | Yes |
+
+---
+
+# TODO / Future Improvements
+
+- [ ] Add Feature Tests (PHPUnit/Pest) for the Order Service
+- [ ] Add API Rate Limiting to prevent spam on trade endpoints
+- [ ] Implement Swagger/Scribe for interactive API documentation
