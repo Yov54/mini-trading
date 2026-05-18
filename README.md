@@ -57,7 +57,7 @@ docker exec -it mifx_app php artisan migrate
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_GITHUB_USERNAME/mini-trading.git
+git clone https://github.com/yov54/mini-trading.git
 
 # Enter project directory
 cd mini-trading
