@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Repositories\TransactionRepository;
+use App\Jobs\SendTransactionNotification;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -62,6 +63,7 @@ class TransactionService
 
             // If everything goes smoothly, save permanently to the database
             DB::commit();
+            SendTransactionNotification::dispatch($transaction); 
 
             return $transaction;
 
